@@ -43,7 +43,6 @@ class ReflexAgent(Agent):
 
         # Choose one of the best actions
         scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        #print 'scores :', scores
         bestScore = max(scores)
         bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
         chosenIndex = random.choice(bestIndices) # Pick randomly among the best
@@ -73,21 +72,9 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        '''
-        print 'curr pacman pos: ', currentGameState.getPacmanPosition()
-        print 'succ pacman pos:', newPos
-        print 'new food: ', newFood
-        print 'new ghost states, length: ', len(newGhostStates), ' position: ', newGhostStates[0].getPosition()
-        print 'ghost positions : ', successorGameState.getGhostPositions()
-        print 'newScaredtimes: ', newScaredTimes
-        '''
+
         "*** YOUR CODE HERE ***"
-        currentPos = currentGameState.getPacmanPosition()
-        score = successorGameState.getScore()
-        if newPos == currentPos:
-            score -= 1.0
-        #print 'score: ',score
-        return score
+        return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
