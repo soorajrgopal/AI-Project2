@@ -18,6 +18,7 @@ import random, util
 
 from game import Agent
 
+
 class ReflexAgent(Agent):
     """
       A reflex agent chooses an action at each choice point by examining
@@ -126,7 +127,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
       Your minimax agent (question 2)
     """
-
     def getAction(self, gameState):
         """
           Returns the minimax action from the current gameState using self.depth
@@ -145,7 +145,32 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        depth = self.depth
+        move = self.minimax(gameState, 0, True, 1)[1]
+        return move
+
+    def minimax(self, gameState, depth, isMaximizing, ghostItr):
+        numGhosts = gameState.getNumAgents() - 1
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+            return (self.evaluationFunction(gameState),None)
+
+        if isMaximizing:   #maximizing
+            bestValue = (float("-inf"), None)
+            for move in gameState.getLegalActions(0):
+                succState = gameState.generateSuccessor(0, move)
+                v = self.minimax(succState, depth, False, 1)
+                if v[0] > bestValue[0]:    bestValue = (v[0],move)
+            return bestValue
+
+        else:   #minimizing
+            bestValue = (float("inf"), None)
+            agentInd = depth % gameState.getNumAgents()
+            for move in gameState.getLegalActions(ghostItr):
+                succState = gameState.generateSuccessor(ghostItr, move)
+                v = self.minimax(succState, depth + 1 if ghostItr == numGhosts else depth, True if ghostItr == numGhosts else False, ghostItr + 1)
+                if v[0] < bestValue[0]:    bestValue = (v[0],move)
+            return bestValue
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
