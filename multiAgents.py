@@ -164,7 +164,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         else:       #Minimizing
             bestValue = (float("inf"), None)
-            agentInd = depth % gameState.getNumAgents()
             for move in gameState.getLegalActions(ghostItr):
                 succState = gameState.generateSuccessor(ghostItr, move)
                 "Do pacman layer if all ghost layers are done else do next ghost layer. Increment depth if all ghosts layers are done"
@@ -184,10 +183,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         depth = self.depth
-        move = self.minimax(gameState, 0, True, 1, float("-inf"), float("inf"))[1]
+        move = self.alphaBetaMinimax(gameState, 0, True, 1, float("-inf"), float("inf"))[1]
         return move
 
-    def minimax(self, gameState, depth, isMaximizing, ghostItr, alpha, beta):
+    def alphaBetaMinimax(self, gameState, depth, isMaximizing, ghostItr, alpha, beta):
         numGhosts = gameState.getNumAgents() - 1
         if gameState.isWin() or gameState.isLose() or depth == self.depth:  #Terminating conditions
             return (self.evaluationFunction(gameState),None)
@@ -196,7 +195,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             bestValue = (float("-inf"), None)
             for move in gameState.getLegalActions(0):
                 succState = gameState.generateSuccessor(0, move)
-                v = self.minimax(succState, depth, False, 1, alpha, beta)       #Do min for all legal successors
+                v = self.alphaBetaMinimax(succState, depth, False, 1, alpha, beta)       #Do min for all legal successors
                 bestValue = (v[0],move) if v[0] > bestValue[0] else bestValue   #Update best move
                 if v[0] > beta: return v
                 alpha = max(v[0],alpha)                                         #Update alpha
@@ -204,11 +203,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         else:   #minimizing
             bestValue = (float("inf"), None)
-            agentInd = depth % gameState.getNumAgents()
             for move in gameState.getLegalActions(ghostItr):
                 succState = gameState.generateSuccessor(ghostItr, move)
                 "Do pacman layer if all ghost layers are done else do next ghost layer. Increment depth if all ghosts layers are done"
-                v = self.minimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1, alpha, beta)
+                v = self.alphaBetaMinimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1, alpha, beta)
                 bestValue = (v[0],move) if v[0] < bestValue[0] else bestValue       #Update best move
                 if v[0] < alpha:    return v
                 beta = min(v[0],beta)                                               #Update beta
@@ -227,7 +225,32 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        return ''
+        depth = self.depth
+        move = self.expectimax(gameState, 0, True, 1)[1]
+        return move
+
+    def expectimax(self, gameState, depth, isMaximizing, ghostItr):
+        numGhosts = gameState.getNumAgents() - 1
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:  #Terminating conditions
+            return (self.evaluationFunction(gameState),None)
+
+        if isMaximizing:    #Maximizing
+            bestValue = (float("-inf"), None)
+            for move in gameState.getLegalActions(0):
+                succState = gameState.generateSuccessor(0, move)
+                v = self.expectimax(succState, depth, False, 1)        #Do min for all legal successors
+                if v[0] > bestValue[0]:    bestValue = (v[0],move)     #Update best move
+            return bestValue
+
+        else:       #Minimizing
+            values = []
+            for move in gameState.getLegalActions(ghostItr):
+                succState = gameState.generateSuccessor(ghostItr, move)
+                "Do pacman layer if all ghost layers are done else do next ghost layer. Add all results to values list. Increment depth if all ghosts layers are done"
+                values.extend([self.expectimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1)])
+            weight = (1.0/len(gameState.getLegalActions(ghostItr)))     #Assign uniform weight to all actions
+            expectation = sum(weight*value[0] for value in values)      #Find expectations by multiplying weight with values and taking sum
+            return (expectation,None)
 
 def betterEvaluationFunction(currentGameState):
     """
