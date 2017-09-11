@@ -167,7 +167,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             agentInd = depth % gameState.getNumAgents()
             for move in gameState.getLegalActions(ghostItr):
                 succState = gameState.generateSuccessor(ghostItr, move)
-                v = self.minimax(succState, depth + 1 if ghostItr == numGhosts else depth, True if ghostItr == numGhosts else False, ghostItr + 1)
+                v = self.minimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1)
                 if v[0] < bestValue[0]:    bestValue = (v[0],move)
             return bestValue
 
@@ -182,7 +182,35 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        depth = self.depth
+        move = self.minimax(gameState, 0, True, 1, float("-inf"), float("inf"))[1]
+        return move
+
+    def minimax(self, gameState, depth, isMaximizing, ghostItr, alpha, beta):
+        numGhosts = gameState.getNumAgents() - 1
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+            return (self.evaluationFunction(gameState),None)
+
+        if isMaximizing:   #maximizing
+            bestValue = (float("-inf"), None)
+            for move in gameState.getLegalActions(0):
+                succState = gameState.generateSuccessor(0, move)
+                v = self.minimax(succState, depth, False, 1, alpha, beta)
+                bestValue = (v[0],move) if v[0] > bestValue[0] else bestValue
+                if v[0] > beta: return v
+                alpha = max(v[0],alpha)
+            return bestValue
+
+        else:   #minimizing
+            bestValue = (float("inf"), None)
+            agentInd = depth % gameState.getNumAgents()
+            for move in gameState.getLegalActions(ghostItr):
+                succState = gameState.generateSuccessor(ghostItr, move)
+                v = self.minimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1, alpha, beta)
+                bestValue = (v[0],move) if v[0] < bestValue[0] else bestValue
+                if v[0] < alpha:    return v
+                beta = min(v[0],beta)
+            return bestValue
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
