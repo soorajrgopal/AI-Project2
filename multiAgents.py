@@ -82,14 +82,14 @@ class ReflexAgent(Agent):
         ghostPosns = successorGameState.getGhostPositions()
         nextGhostPos = []
         for x,y in ghostPosns:
-            nextGhostPos.extend([(x+1,y),(x-1,y),(x,y+1),(x,y-1)])
-        if newPos not in nextGhostPos and newPos not in ghostPosns: score+=1
+            nextGhostPos.extend([(x+1,y),(x-1,y),(x,y+1),(x,y-1)])                  #Find possible ghost new positions
+        if newPos not in nextGhostPos and newPos not in ghostPosns: score+=1        #Give score a boost if new pacman position is not a ghost position or a possible one
 
         "Look at food positions"
-        foodPos = [(ix,iy) for ix, row in enumerate(newFood) for iy, i in enumerate(row) if i == True]
-        newDist = min([util.manhattanDistance(newPos,pos) for pos in foodPos]) if foodPos else 0
-        oldDist = min([util.manhattanDistance(currPos,pos) for pos in foodPos]) if foodPos else 0
-        if newDist < oldDist: score+=1
+        foodPos = [(ix,iy) for ix, row in enumerate(newFood) for iy, i in enumerate(row) if i == True]  #Get food coordinates in (x,y) format
+        newDist = min([util.manhattanDistance(newPos,pos) for pos in foodPos]) if foodPos else 0        #Get smallest manhattan distance between new position and food
+        oldDist = min([util.manhattanDistance(currPos,pos) for pos in foodPos]) if foodPos else 0       #Get smallest manhattan distance between old position and food
+        if newDist < oldDist: score+=1      #Give score a boost if new position is closer to the nearest food
 
         return score
 
@@ -151,24 +151,25 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def minimax(self, gameState, depth, isMaximizing, ghostItr):
         numGhosts = gameState.getNumAgents() - 1
-        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:  #Terminating conditions
             return (self.evaluationFunction(gameState),None)
 
-        if isMaximizing:   #maximizing
+        if isMaximizing:    #Maximizing
             bestValue = (float("-inf"), None)
             for move in gameState.getLegalActions(0):
                 succState = gameState.generateSuccessor(0, move)
-                v = self.minimax(succState, depth, False, 1)
-                if v[0] > bestValue[0]:    bestValue = (v[0],move)
+                v = self.minimax(succState, depth, False, 1)        #Do min for all legal successors
+                if v[0] > bestValue[0]:    bestValue = (v[0],move)  #Update best move
             return bestValue
 
-        else:   #minimizing
+        else:       #Minimizing
             bestValue = (float("inf"), None)
             agentInd = depth % gameState.getNumAgents()
             for move in gameState.getLegalActions(ghostItr):
                 succState = gameState.generateSuccessor(ghostItr, move)
+                "Do pacman layer if all ghost layers are done else do next ghost layer. Increment depth if all ghosts layers are done"
                 v = self.minimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1)
-                if v[0] < bestValue[0]:    bestValue = (v[0],move)
+                if v[0] < bestValue[0]:    bestValue = (v[0],move)      #Update best move
             return bestValue
 
 
@@ -188,17 +189,17 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def minimax(self, gameState, depth, isMaximizing, ghostItr, alpha, beta):
         numGhosts = gameState.getNumAgents() - 1
-        if gameState.isWin() or gameState.isLose() or depth == self.depth:
+        if gameState.isWin() or gameState.isLose() or depth == self.depth:  #Terminating conditions
             return (self.evaluationFunction(gameState),None)
 
         if isMaximizing:   #maximizing
             bestValue = (float("-inf"), None)
             for move in gameState.getLegalActions(0):
                 succState = gameState.generateSuccessor(0, move)
-                v = self.minimax(succState, depth, False, 1, alpha, beta)
-                bestValue = (v[0],move) if v[0] > bestValue[0] else bestValue
+                v = self.minimax(succState, depth, False, 1, alpha, beta)       #Do min for all legal successors
+                bestValue = (v[0],move) if v[0] > bestValue[0] else bestValue   #Update best move
                 if v[0] > beta: return v
-                alpha = max(v[0],alpha)
+                alpha = max(v[0],alpha)                                         #Update alpha
             return bestValue
 
         else:   #minimizing
@@ -206,10 +207,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             agentInd = depth % gameState.getNumAgents()
             for move in gameState.getLegalActions(ghostItr):
                 succState = gameState.generateSuccessor(ghostItr, move)
+                "Do pacman layer if all ghost layers are done else do next ghost layer. Increment depth if all ghosts layers are done"
                 v = self.minimax(succState, (depth + 1 if ghostItr == numGhosts else depth), (True if ghostItr == numGhosts else False), ghostItr + 1, alpha, beta)
-                bestValue = (v[0],move) if v[0] < bestValue[0] else bestValue
+                bestValue = (v[0],move) if v[0] < bestValue[0] else bestValue       #Update best move
                 if v[0] < alpha:    return v
-                beta = min(v[0],beta)
+                beta = min(v[0],beta)                                               #Update beta
             return bestValue
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
@@ -225,7 +227,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return ''
 
 def betterEvaluationFunction(currentGameState):
     """
