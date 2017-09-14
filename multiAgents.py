@@ -257,10 +257,49 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION:  Four parameters are looked at to evaluate the state:
+                    (1) Distances with food positions, (2) Distance with ghosts, (3) Distance with capsules and (4) Scared time of ghosts
+
+                    Distances with food positions:
+                        Get distance to nearest food. Take reciprocal of this value, means being nearer to food is better. Assigned a factor of 5 to this value.
+                    Distance with ghosts:
+                        Get sum of distances with all ghosts. Assigned a factor of 2 to this value. Farther the distance, the better.
+                    Distance with capsules:
+                        Same as the case of food, try and get nearer to capsules.
+                    Scared time of ghosts:
+                        Get minimum scared time of ghosts. Get distance to the nearest ghost.
+                        If the number of moves to get to a scared ghost is atleast twice (to be safe, accounting for the movement of the ghost) the distance to the nearest one, assign a factor of 4 to those moves. Additionally, check if all the ghosts are scared before going for the nearest one, as it could be a respawned ghost (not scared anymore).
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # Useful information you can extract from a GameState (pacman.py)
+    #successorGameState = currentGameState.generatePacmanSuccessor(action)
+    pacmanPos = currentGameState.getPacmanPosition()
+    foodGrid = currentGameState.getFood()
+    ghostStates = currentGameState.getGhostStates()
+    ghostPosns = currentGameState.getGhostPositions()
+    capsules = currentGameState.getCapsules()
+
+    "Get closer to food"
+    foodPos = [(ix,iy) for ix, row in enumerate(foodGrid) for iy, i in enumerate(row) if i == True]         #Get food coordinates in (x,y) format
+    foodMinDist = min([util.manhattanDistance(pacmanPos,food) for food in foodPos]) if foodPos else 0       #Get distance to nearest food
+    foodDistEval = 1/foodMinDist if foodPos else 0                                                          #Nearer the food, better the evaluation
+
+    "Keep distance with ghosts"
+    ghostDist = sum([util.manhattanDistance(pacmanPos,ghostPos) for ghostPos in ghostPosns])                #Add up distance to all ghosts, farther the better
+
+    "Get to a capsule"
+    capDist = min([util.manhattanDistance(pacmanPos,capsule) for capsule in capsules]) if capsules else 0   #Get distance to nearest capsule
+    capEval = 1/capDist if capsules else 0                                                                  #Nearer the capsule, better the evaluation
+
+    "Chasing ghosts"
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]                                                #Get remaining scared time
+    ghostMinDist = min([util.manhattanDistance(pacmanPos,ghostPos) for ghostPos in ghostPosns]) if ghostPosns else 1    #Look at nearest ghost
+    pelletEval = 0
+    if min(scaredTimes) >= 2*ghostMinDist and len(scaredTimes)==len(ghostPosns):
+        pelletEval = min(scaredTimes) if ghostPosns else 0       #If the nearest ghost can be caught up comfortably within remaining time, and if it is scared, get closer to it
+
+    return currentGameState.getScore() + 2*ghostDist + 5*capEval + 5*foodDistEval + 4*pelletEval
 
 # Abbreviation
 better = betterEvaluationFunction
